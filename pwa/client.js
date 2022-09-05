@@ -2,7 +2,7 @@
 const cleanMessage = (svc) => {
   let errorMsg = document.querySelector("#msg_"+svc.toLowerCase());
   if (!errorMsg) return;
-  errorMsg.innerHTML = "";
+  errorMsg.innerHTML = escapedHTMLPolicy.createHTML("");
   errorMsg.classList.remove("success_msg");
   errorMsg.classList.remove("error_msg");
 };
@@ -11,7 +11,7 @@ const displayErrorMsg = (svc, text) => {
   cleanMessage(svc);
   let errorMsg = document.querySelector("#msg_"+svc.toLowerCase());
   if (!errorMsg) return;
-  errorMsg.innerHTML = text;
+  errorMsg.innerHTML = escapedHTMLPolicy.createHTML(text);
   errorMsg.classList.remove("success_msg");
   errorMsg.classList.add("error_msg");
 };
@@ -20,7 +20,7 @@ const displaySuccessMsg = (svc, text) => {
   cleanMessage(svc);
   let successMsg = document.querySelector("#msg_"+svc.toLowerCase());
   if (!successMsg) return;
-  successMsg.innerHTML = text;
+  successMsg.innerHTML = escapedHTMLPolicy.createHTML(text);
   successMsg.classList.remove("error_msg");
   successMsg.classList.add("success_msg");
 };
@@ -41,7 +41,7 @@ const versionHint = () => {
   var hint = document.getElementById("version_hint");
   try {
     var majorVersion = n.slice(n.indexOf("Chrom"), n.length).split(" ", 1)[0].split("/", 2)[1].split(".", 1)[0];
-    if (100 <= majorVersion && 102 >= majorVersion) {
+    if (107 <= majorVersion && 106 >= majorVersion) {
       hint.classList.add('green');
     } else {
       hint.classList.add('error_msg');
@@ -55,7 +55,7 @@ const versionHint = () => {
 const domainHint = () => {
   var domain = window.location.hostname;
   var hint = document.getElementById("domain_hint");
-  hint.innerHTML = domain;
+  hint.textContent = domain;
 }
 
 const pwaCheck = () => {
@@ -67,12 +67,12 @@ const pwaCheck = () => {
   }
 }
 
-const test = async () => {
-  const data = "";
-  console.log(data);
-  alert(data);
-}
-
+document.getElementById("get_help").addEventListener("click", () => {
+  toggle('install_help');
+  versionHint();
+  pwaCheck();
+  domainHint();
+});
 
 const ntpPollBtn = document.querySelector("#ntp_poll_btn");
 const ntpPollStopBtn = document.querySelector("#ntp_poll_stop_btn");
@@ -80,6 +80,14 @@ const ntpPollStopBtn = document.querySelector("#ntp_poll_stop_btn");
 const dnsQueryBtn = document.querySelector("#dns_query_btn");
 
 const scbQueryBtn = document.querySelector("#scb_query_btn");
+
+const escapedHTMLPolicy = trustedTypes.createPolicy("htmlEscapePolicy", {
+  createHTML: (string) => string.replace(/\n/g, '<br/>')
+});
+
+const escapedPreHTMLPolicy = trustedTypes.createPolicy("preEscapePolicy", {
+  createHTML: (string) => '<pre>'+string.replace(/\n/g, '<br/>')+'</pre>'
+});
 
 const addTrigger = (e, service, action) => {
   e.addEventListener("click", async e => {
@@ -151,7 +159,7 @@ const processSCBPayload = async (remoteAddress, remotePort, query, scb_server) =
   successMsg.classList.remove("success_msg");
   const response = await fetch('https://'+scb_server+':8041/topology', {mode: 'cors', });
   var formattedJSON=JSON.stringify(JSON.parse(await response.text()), null, 2);
-  successMsg.innerHTML='<pre>'+formattedJSON.replaceAll("\n", "<br/>")+'</pre>';
+  successMsg.innerHTML = escapedPreHTMLPolicy.createHTML(formattedJSON);
   await new Promise(r => setTimeout(r, 1000));
   return true;
 }
@@ -160,7 +168,6 @@ const sendDatagram = async (writer, createPayload) => {
   if (!inUse) {
     return { value: undefined, done: true }
   }
-  await writer.ready;
   const result = await writer.write({
     data: createPayload()
   }).then(() => true, err => {
@@ -207,7 +214,7 @@ const receiveDatagram = async (reader, service, parsePayload, processPayload) =>
 
 async function doPolling(service, host, port, createPayload, parsePayload, processPayload) {
   try {
-    udpSocket = new UDPSocket(host, parseInt(port));
+    udpSocket = new UDPSocket({remoteAddress: host, remotePort: parseInt(port)});
     await udpSocket.opened;
   } catch (err) {
     displayErrorMsg(service, `opening UDPSocket failed: ${err}.\nGet some help.`);
@@ -216,9 +223,9 @@ async function doPolling(service, host, port, createPayload, parsePayload, proce
     return;
   }
 
-  const { readable, writable, remoteAddress, remotePort } = await udpSocket.connection;
+  const { readable, writable, remoteAddress, remotePort } = await udpSocket.opened;
 
-  displaySuccessMsg(service, `Opened UDP connection to ${service} server at ${remoteAddress}:${remotePort}.`);
+  displaySuccessMsg(service, `Opened UDP socket to ${service} server at ${remoteAddress}:${remotePort}.`);
 
   await new Promise(r => setTimeout(r, 1000));
 
@@ -232,11 +239,14 @@ async function doPolling(service, host, port, createPayload, parsePayload, proce
     sendDatagram(writer, createPayload);
     await new Promise(r => setTimeout(r, 1000));
   }
+  reader.cancel();
+  reader.releaseLock();
+  writer.releaseLock();
 };
 
 async function doOneshot(service, host, port, createPayload, parsePayload, processPayload) {
   try {
-    udpSocket = new UDPSocket(host, parseInt(port));
+    udpSocket = new UDPSocket({remoteAddress: host, remotePort: parseInt(port)});
     await udpSocket.opened;
   } catch (err) {
     displayErrorMsg(service, `opening UDPSocket failed: ${err}.\nGet some help.`);
@@ -245,9 +255,9 @@ async function doOneshot(service, host, port, createPayload, parsePayload, proce
     return;
   }
 
-  const { readable, writable, remoteAddress, remotePort } = await udpSocket.connection;
+  const { readable, writable, remoteAddress, remotePort } = await udpSocket.opened;
 
-  displaySuccessMsg(service, `Opened UDP connection to ${service} server at ${remoteAddress}:${remotePort}.`);
+  displaySuccessMsg(service, `Opened UDP socket to ${service} server at ${remoteAddress}:${remotePort}.`);
 
   await new Promise(r => setTimeout(r, 1000));
 
@@ -256,8 +266,11 @@ async function doOneshot(service, host, port, createPayload, parsePayload, proce
   sendDatagram(writer, createPayload);
   await new Promise(r => setTimeout(r, 500));
   receiveDatagram(reader, service, parsePayload, processPayload);
+  writer.releaseLock();
   await new Promise(r => setTimeout(() => {
     inUse = false;
+    reader.cancel();
+    reader.releaseLock();
     udpSocket.close({ force: true });
     udpSocket = undefined;
     reader = undefined;
@@ -283,6 +296,7 @@ if (ntpPollStopBtn) {
     }
 
     inUse = false;
+    await new Promise(r => setTimeout(r, 1000));
     udpSocket.close({ force: true });
     udpSocket = undefined;
     reader = undefined;

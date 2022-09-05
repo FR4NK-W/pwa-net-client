@@ -1,0 +1,23 @@
+body {
+    width: 42em;
+    margin: 0 auto;
+    font-family: Tahoma,Verdana,Arial,sans-serif;
+    color: #383838;
+    background: #f5f5f5;
+}
+table {
+    border-style: double;
+    border-collapse: collapse;
+}
+col { border: 1px solid #000; }
+tr { border: 1px solid #000; }
+td { padding: 7px; }
+.error_msg { color: #ff0000; }
+.success_msg { color: #0000ff; }
+.target { width: 9em; }
+.msg { width: 16em; }
+.baby { color: #0b8dd0; }
+.hidden { display: none; }
+.pre_msg { overflow: auto; }
+.green { color: #00cc00; }
+.pwa_icon { background-image: url("/pwa_icon.png");}

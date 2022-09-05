@@ -5,58 +5,12 @@
     <meta charset="utf-8" />
     <title>Chromium Direct Sockets PWA</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="manifest" href="/manifest.json" />
-    <style>
-        body {
-            width: 42em;
-            margin: 0 auto;
-            font-family: Tahoma,Verdana,Arial,sans-serif;
-            color: #383838;
-            background: #f5f5f5;
-        }
-        table {
-            border-style: double;
-            border-collapse: collapse;
-        }
-        col { border: 1px solid #000; }
-        tr { border: 1px solid #000; }
-        td { padding: 7px; }
-        .error_msg { color: #ff0000; }
-        .success_msg { color: #0000ff; }
-        .target { width: 9em; }
-        .msg { width: 16em; }
-        .baby { color: #0b8dd0; }
-        .hidden { display: none; }
-        .pre_msg { overflow: auto; }
-        .green { color: #00cc00; }
-	.pwa_icon { background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIgMTYiIGhlaWdodD0iIDE2IiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsYXNzPSJ2ZWN0b3Itc3ZnIj4KPHBhdGggZmlsbD0iZ3JheSIgc3Ryb2tlPSJncmF5IiBzdHJva2Utd2lkdGg9IjBweCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzaGFwZS1yZW5kZXJpbmc9Imdlb21ldHJpY1ByZWNpc2lvbiIgZD0iTSA2LjQyIDIgdiAxLjIgSCAyLjE5IHYgOC40NCBoIDExLjYxIFYgOS41OCBIIDE0Ljk5IHYgMS44MSBhIDEuNDUgMS40NSAwIDAgMSAtMS4zMSAxLjQ0IGwgLTAuMTQgMC4wMSBIIDExLjc0IGwgMC42NSAwLjcyIFYgMTUgSCAzLjYgdiAtMS40NCBsIDAuNjUgLTAuNzIgSCAyLjQ0IGEgMS40NCAxLjQ0IDAgMCAxIC0xLjQ0IC0xLjMxIEwgMSAxMS4zOSBWIDMuNDQgYyAwIC0wLjc1IDAuNTcgLTEuMzcgMS4zMSAtMS40NCBMIDIuNDQgMiBoIDMuOTcgWiBNIDExLjIgMiB2IDUuMSBsIDEuNzUgLTEuODEgTCAxNCA2LjM3IEwgMTAuNSAxMCBMIDcgNi4zNyBsIDEuMDUgLTEuMDkgTCA5LjggNy4xIFYgMiBoIDEuNCBaIi8+Cjwvc3ZnPgo=");}
-    </style>
-    <script>
-// Service worker is needed for the app to be installable
-// (aka to show the installing prompt for a PWA).
-
-// Redirect to secure connection, PWA installation is only possible with https.
-if (location.hostname !== "localhost") {
-  location.protocol === "http:" && (location.protocol = "https:");
-} else {
-  console.log("PWA installation is only possible with https.");
-}
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker
-    .register('/sw.js')
-    .then(() => { console.log('Registered Service Worker'); });
-}
-    </script>
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="stylesheet"  href="/base.css" />
+    <script src="/register_sw.js" type="text/javascript"></script>
     <script src="/client.js" defer></script>
     <script src="wasm_exec.js" type="text/javascript"></script>
-    <script>
-      var wasm_loaded = undefined;
-      const go = new Go();
-      WebAssembly.instantiateStreaming(fetch("wasm_dsa.wasm"), go.importObject).then((result) => {
-              go.run(result.instance);
-              wasm_loaded = true;
-      });
-    </script>
+    <script src="/load_wasm.js" type="text/javascript"></script>
   </head>
   <body>
     <h1>
@@ -67,22 +21,22 @@ if ('serviceWorker' in navigator) {
       By installing this PWA the Direct Sockets API become accessible for testing the sending and receiving of raw UDP datagrams and TCP segments.
     </p>
 
-    <p id="get_help" onclick="toggle('install_help'); versionHint(); pwaCheck(); domainHint();" title="Yes, please                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                click"><b class="baby">Need help?</b></p>
+    <p id="get_help" title="Yes, please                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                click"><b class="baby">Need help?</b></p>
     <div id="install_help" class="hidden">
     <p>
       <b>Installation prerequisites</b>:
       <ul>
-        <li>100.0.4894.0 &lt;= <span id="version_hint">Chromium build</span> &lt;= 102.0.4997.0. You can do so using snap:
+        <li>106.0.5230.0 &lt;= <span id="version_hint">Chromium build</span> &lt;= 106.0.5249.12. You can do so using snap:
           <pre class="pre_msg">
 sudo apt-get install snapd
 sudo snap set system experimental.parallel-instances=true
-curl -sL 'https://api.snapcraft.io/api/v1/snaps/download/XKEcBqPM06H1Z7zGOdG5fbICuf8NWK5R_1962.snap' -o chromium_102_release1962.snap
-sudo snap install --dangerous chromium_102_release1962.snap
+curl -sL 'https://api.snapcraft.io/api/v1/snaps/download/XKEcBqPM06H1Z7zGOdG5fbICuf8NWK5R_2077.snap' -o chromium_106_release2077.snap
+sudo snap install --dangerous chromium_106_release2077.snap
 chromium --version
           </pre>
         </li> 
 	<li><span id="pwa_check">Installed PWA</span> from address bar <span class="pwa_icon">&emsp;</span> (click page, wait for 30'', check console for errors if PWA installation button <span class="pwa_icon">&emsp;</span> is missing, restart after installing)</li>
-	<li>Launch Chromium instance with `chromium --restricted-api-origins=https://<span id="domain_hint">domain</span>` or permanently set it with chrome://flags &gt; Restricted API Origins &gt; domain name (restart after applying)</li>
+	<li>Launch Chromium instance with `chromium --isolated-app-origins=https://<span id="domain_hint">domain</span>` or permanently set it with chrome://flags &gt; Restricted API Origins &gt; domain name (restart after applying)</li>
       </ul>
     </p>
     </div>
@@ -165,8 +119,5 @@ chromium --version
       </td>
     </tr>
     </table>
-    <button id="test" onclick="test();" class="hidden">
-      TEST
-    </button>
   </body>
 </html>
