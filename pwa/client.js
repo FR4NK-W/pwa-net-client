@@ -41,7 +41,7 @@ const versionHint = () => {
   var hint = document.getElementById("version_hint");
   try {
     var majorVersion = n.slice(n.indexOf("Chrom"), n.length).split(" ", 1)[0].split("/", 2)[1].split(".", 1)[0];
-    if (107 <= majorVersion && 106 >= majorVersion) {
+    if (106 <= majorVersion && 107 >= majorVersion) {
       hint.classList.add('green');
     } else {
       hint.classList.add('error_msg');
