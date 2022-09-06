@@ -1,4 +1,4 @@
-module example.com/direct-sockets-ntp
+module github.com/FR4NK-W/pwa-net-client
 
 require github.com/miekg/dns v1.1.27
 

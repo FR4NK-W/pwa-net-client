@@ -11,13 +11,13 @@ import (
 )
 
 func main() {
-	exports := map[string]func (js.Value, []js.Value) interface{} {
+	exports := map[string]func(js.Value, []js.Value) interface{}{
 		"GenerateNTPPayload": GenerateNTPPayload,
-		"ParseNTPPayload": ParseNTPPayload,
+		"ParseNTPPayload":    ParseNTPPayload,
 		"GenerateDNSPayload": GenerateDNSPayload,
-		"ParseDNSPayload": ParseDNSPayload,
+		"ParseDNSPayload":    ParseDNSPayload,
 		"GenerateSCBPayload": GenerateSCBPayload,
-		"ParseSCBPayload": ParseSCBPayload,
+		"ParseSCBPayload":    ParseSCBPayload,
 	}
 
 	for jsFuncName, goFunc := range exports {
@@ -103,7 +103,7 @@ func ParseDNSPayload(this js.Value, args []js.Value) interface{} {
 		return nil
 	}
 	var output string
-	if len(msg.Answer) > 0{
+	if len(msg.Answer) > 0 {
 		answer := msg.Answer[0]
 		switch answer.(type) {
 		case *dns.A:

@@ -82,15 +82,19 @@ const dnsQueryBtn = document.querySelector("#dns_query_btn");
 const scbQueryBtn = document.querySelector("#scb_query_btn");
 
 const escapedHTMLPolicy = trustedTypes.createPolicy("htmlEscapePolicy", {
-  createHTML: (string) => string.replace(/\n/g, '<br/>')
+  createHTML: (string) => string.replace(/</g, '&lt;')
+                                .replace(/>/g, '&gt;')
+                                .replace(/\n/g, '<br/>')
 });
 
 const escapedPreHTMLPolicy = trustedTypes.createPolicy("preEscapePolicy", {
-  createHTML: (string) => '<pre>'+string.replace(/\n/g, '<br/>')+'</pre>'
+  createHTML: (string) => '<pre>'+string.replace(/</g, '&lt;')
+                                        .replace(/>/g, '&gt;')
+                                        .replace(/\n/g, '<br/>')+'</pre>'
 });
 
 const addTrigger = (e, service, action) => {
-  e.addEventListener("click", async e => {
+  e.addEventListener("click", async () => {
     if (!socketAvailable(service)) {
       return;
     }
@@ -123,26 +127,13 @@ const socketAvailable = (svc) => {
   return true;
 }
 
-const createNTPPayload = () => {
-  const data = new Uint8Array(48);
-  data[0] = 27;
-  return data;
-};
-
-const parseNTPPayload = (data) => {
-  console.log(Array.apply([], data.slice(40, 44)).join(", "));
-  const secondsSince19000101 = (new DataView(data.slice(40, 44).buffer)).getUint32();
-  const date = new Date(new Date(1900, 1, 1) - new Date(1970, 1, 1) + secondsSince19000101 * 1000);
-  return date;
-};
-
 const processNTPPayload = (remoteAddress, remotePort, date) => {
-  displaySuccessMsg('NTP', `NTP server at ${remoteAddress}:${remotePort} <br/>replied with current local time:<br/> ${date.toString()}.`);
+  displaySuccessMsg('NTP', `NTP server at ${remoteAddress}:${remotePort} \nreplied with current local time:\n ${date.toString()}.`);
   return false;
 }
 
 const processDNSPayload = (remoteAddress, remotePort, query, IP) => {
-  displaySuccessMsg('DNS', `DNS server at ${remoteAddress}:${remotePort} <br/>resolved the IP address for the <br/>domain ${query} to ${IP.toString()}.`);
+  displaySuccessMsg('DNS', `DNS server at ${remoteAddress}:${remotePort} \nresolved the IP address for the \ndomain ${query} to ${IP.toString()}.`);
   return true;
 }
 
